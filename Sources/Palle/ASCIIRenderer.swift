@@ -10,6 +10,7 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
     private var pipelineState: MTLRenderPipelineState!
     private var fontAtlasTexture: MTLTexture?
     private var fallbackMediaTexture: MTLTexture!
+    private var fallbackTextSDFTexture: MTLTexture!
 
     private var startTime: CFTimeInterval = CACurrentMediaTime()
     private var mouseNormalized = SIMD2<Float>(0.5, 0.5)
@@ -28,10 +29,12 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
         mtkView.colorPixelFormat = .bgra8Unorm
         mtkView.framebufferOnly = true
 
-        guard let dummy = makeDummyTexture() else {
+        guard let dummy = makeDummyTexture(),
+              let dummySDF = makeDummySDFTexture() else {
             return nil
         }
         self.fallbackMediaTexture = dummy
+        self.fallbackTextSDFTexture = dummySDF
 
         guard buildPipeline(mtkView: mtkView) else {
             return nil
@@ -46,6 +49,15 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
         guard let tex = device.makeTexture(descriptor: desc) else { return nil }
         var black: UInt32 = 0
         tex.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &black, bytesPerRow: 4)
+        return tex
+    }
+
+    private func makeDummySDFTexture() -> MTLTexture? {
+        let desc = MTLTextureDescriptor.texture2DDescriptor(pixelFormat: .r8Unorm, width: 1, height: 1, mipmapped: false)
+        desc.usage = [.shaderRead]
+        guard let tex = device.makeTexture(descriptor: desc) else { return nil }
+        var white: UInt8 = 255
+        tex.replace(region: MTLRegionMake2D(0, 0, 1, 1), mipmapLevel: 0, withBytes: &white, bytesPerRow: 1)
         return tex
     }
 
@@ -126,6 +138,7 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
 
         let isMedia = (activeMediaTexture != nil) ? Int32(1) : Int32(0)
         let useTrueColor = config.useTrueColor ? Int32(1) : Int32(0)
+        let hasCustomText = (config.hasCustomTextSDF && config.textSDFTexture != nil) ? Int32(1) : Int32(0)
 
         var uniforms = ShaderUniforms(
             resolution: SIMD2<Float>(Float(view.drawableSize.width), Float(view.drawableSize.height)),
@@ -138,7 +151,11 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
             isCustomMedia: isMedia,
             useTrueColor: useTrueColor,
             fgColor: config.fgColor,
-            bgColor: config.bgColor
+            bgColor: config.bgColor,
+            textAspect: config.textAspect,
+            textHalfW: config.textHalfW,
+            textHalfH: config.textHalfH,
+            hasCustomTextSDF: hasCustomText
         )
 
         encoder.setRenderPipelineState(pipelineState)
@@ -147,6 +164,9 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
 
         let mediaTex = activeMediaTexture ?? fallbackMediaTexture!
         encoder.setFragmentTexture(mediaTex, index: 1)
+
+        let textSDFTex = config.textSDFTexture ?? fallbackTextSDFTexture!
+        encoder.setFragmentTexture(textSDFTex, index: 2)
 
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
         encoder.endEncoding()
@@ -176,6 +196,10 @@ struct Uniforms {
     int useTrueColor;
     float4 fgColor;
     float4 bgColor;
+    float textAspect;
+    float textHalfW;
+    float textHalfH;
+    int hasCustomTextSDF;
 };
 
 // Fullscreen triangle vertex shader (avoids vertex buffer overhead)
@@ -226,10 +250,34 @@ float dMyth2D(float2 p) {
     return d - 0.07;
 }
 
+// 2D distance to letter strokes of "MYTH" or custom dynamic text
+float sampleText2D(float2 p, constant Uniforms &u, texture2d<float> textSDF, sampler s) {
+    if (u.hasCustomTextSDF == 1) {
+        float halfW = max(u.textHalfW, 0.2);
+        float halfH = max(u.textHalfH, 0.2);
+        float2 uv = float2(
+            (p.x + halfW) / (2.0 * halfW),
+            (halfH - p.y) / (2.0 * halfH)
+        );
+
+        float dBox = max(abs(p.x) - halfW, abs(p.y) - halfH);
+
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            return max(dBox + 0.05, 0.05);
+        }
+
+        float sdf = textSDF.sample(s, uv).r;
+        float dFont = (0.5 - sdf) * (halfH * 0.95);
+        return max(dFont, dBox);
+    } else {
+        return dMyth2D(p);
+    }
+}
+
 // Signed Distance Function: 3D Scenes
-float mapScene(float3 p, constant Uniforms &u) {
+float mapScene(float3 p, constant Uniforms &u, texture2d<float> textSDF, sampler s) {
     if (u.sceneType == 7) {
-        // Scene 7: ⚡️ 3D MYTH Cyber Hologram & Astrolabe
+        // Scene 7: ⚡️ 3D Cyber Hologram & Astrolabe
         float rotX = 0.22 + (u.mouseNormalized.y - 0.5) * 0.9 + sin(u.time * 0.8) * 0.12;
         float rotY = u.time * 0.55 + (u.mouseNormalized.x - 0.5) * 1.2;
         p.yz = rot2D(rotX) * p.yz;
@@ -239,11 +287,11 @@ float mapScene(float3 p, constant Uniforms &u) {
         float3 pText = p;
         pText.y += sin(pText.x * 2.2 + u.time * 2.5) * 0.06;
 
-        float d2D = dMyth2D(pText.xy);
+        float d2D = sampleText2D(pText.xy, u, textSDF, s);
         float2 w = float2(d2D, abs(pText.z) - 0.14);
         float dText3D = min(max(w.x, w.y), 0.0) + length(max(w, 0.0)) - 0.025;
 
-        // Inner beveled neon groove inside MYTH letters for extra geometric depth
+        // Inner beveled neon groove inside letters for extra geometric depth
         float innerGroove = abs(d2D + 0.032) - 0.012;
         innerGroove = max(innerGroove, abs(pText.z) - 0.155);
         dText3D = min(dText3D, innerGroove);
@@ -309,10 +357,10 @@ float mapScene(float3 p, constant Uniforms &u) {
         // Photon ring sphere at r = 1.05
         float photonRing = abs(length(p) - 1.05) - 0.025;
 
-        // Central floating MYTH crest above singularity
+        // Central floating custom text crest above singularity
         float3 pText = p - float3(0.0, 0.45 + sin(u.time * 2.0) * 0.08, 0.0);
         pText.xz = rot2D(u.time * 0.7) * pText.xz;
-        float d2D = dMyth2D(pText.xy * 1.4);
+        float d2D = sampleText2D(pText.xy * 1.4, u, textSDF, s);
         float2 w = float2(d2D, abs(pText.z) - 0.12);
         float dMythCrest = (min(max(w.x, w.y), 0.0) + length(max(w, 0.0)) - 0.02) / 1.4;
 
@@ -481,13 +529,13 @@ float mapScene(float3 p, constant Uniforms &u) {
     }
 }
 
-float3 calcNormal(float3 p, constant Uniforms &u) {
+float3 calcNormal(float3 p, constant Uniforms &u, texture2d<float> textSDF, sampler s) {
     float2 e = float2(0.0015, -0.0015);
     return normalize(
-        e.xyy * mapScene(p + e.xyy, u) +
-        e.yyx * mapScene(p + e.yyx, u) +
-        e.yxy * mapScene(p + e.yxy, u) +
-        e.xxx * mapScene(p + e.xxx, u)
+        e.xyy * mapScene(p + e.xyy, u, textSDF, s) +
+        e.yyx * mapScene(p + e.yyx, u, textSDF, s) +
+        e.yxy * mapScene(p + e.yxy, u, textSDF, s) +
+        e.xxx * mapScene(p + e.xxx, u, textSDF, s)
     );
 }
 
@@ -495,7 +543,8 @@ fragment float4 fragment_main(
     VertexOut in [[stage_in]],
     constant Uniforms &u [[buffer(0)]],
     texture2d<float> fontAtlas [[texture(0)]],
-    texture2d<float> mediaTexture [[texture(1)]]
+    texture2d<float> mediaTexture [[texture(1)]],
+    texture2d<float> textSDF [[texture(2)]]
 ) {
     constexpr sampler texSampler(mag_filter::linear, min_filter::linear, address::clamp_to_edge);
 
@@ -554,7 +603,7 @@ fragment float4 fragment_main(
     float hit = 0.0;
     for (int i = 0; i < 72; ++i) {
         float3 p = ro + rd * t;
-        float d = mapScene(p, u);
+        float d = mapScene(p, u, textSDF, texSampler);
         if (d < 0.0018) {
             hit = 1.0;
             break;
@@ -569,7 +618,7 @@ fragment float4 fragment_main(
 
     if (hit > 0.5) {
         float3 p = ro + rd * t;
-        float3 n = calcNormal(p, u);
+        float3 n = calcNormal(p, u, textSDF, texSampler);
         float3 viewDir = -rd;
 
         // Blinn-Phong Specular Reflection
@@ -584,7 +633,7 @@ fragment float4 fragment_main(
         float aoWeight = 1.0;
         for (int a = 1; a <= 4; ++a) {
             float hr = 0.035 * float(a);
-            float dAo = mapScene(p + n * hr, u);
+            float dAo = mapScene(p + n * hr, u, textSDF, texSampler);
             ao += (hr - dAo) * aoWeight;
             aoWeight *= 0.6;
         }

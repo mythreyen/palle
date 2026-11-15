@@ -35,6 +35,7 @@ public final class DesktopWindowController {
         }
 
         CustomWallpaperManager.shared.restoreSavedWallpaperIfAny(device: device)
+        CustomTextManager.shared.restoreSavedTextIfAny(device: device)
 
         let desktopLevel = Int(CGWindowLevelForKey(.desktopWindow))
 

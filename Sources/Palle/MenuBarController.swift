@@ -36,7 +36,13 @@ public final class MenuBarController: NSObject {
         menu.addItem(sceneHeader)
 
         for scene in SceneGeometry.allCases {
-            let item = NSMenuItem(title: scene.displayName, action: #selector(selectScene(_:)), keyEquivalent: "")
+            var title = scene.displayName
+            if scene == .mythHologram && config.custom3DText != "MYTH" {
+                title = "⚡️ 3D \"\(config.custom3DText)\" Cyber Hologram"
+            } else if scene == .mythPortal && config.custom3DText != "MYTH" {
+                title = "🌌 3D \"\(config.custom3DText)\" Cosmic Wormhole"
+            }
+            let item = NSMenuItem(title: title, action: #selector(selectScene(_:)), keyEquivalent: "")
             item.target = self
             item.tag = Int(scene.rawValue)
             item.state = (!config.isCustomImageActive && config.scene == scene) ? .on : .off
@@ -68,6 +74,11 @@ public final class MenuBarController: NSObject {
         chooseItem.target = self
         chooseItem.state = config.isCustomMediaActive ? .on : .off
         menu.addItem(chooseItem)
+
+        let textTitle = "✏️ Set 3D Hologram Text... (Current: \"\(config.custom3DText)\")"
+        let textItem = NSMenuItem(title: textTitle, action: #selector(setCustom3DText), keyEquivalent: "t")
+        textItem.target = self
+        menu.addItem(textItem)
 
         // Play/Pause control for animated video/GIF loops
         if config.customMediaType == .video || config.customMediaType == .gif {
@@ -202,6 +213,15 @@ public final class MenuBarController: NSObject {
 
     @objc private func chooseCustomImage() {
         chooseCustomMedia()
+    }
+
+    @objc private func setCustom3DText() {
+        guard let device = MTLCreateSystemDefaultDevice() else { return }
+        CustomTextManager.shared.promptForCustomText(device: device) { [weak self] success in
+            if success {
+                self?.rebuildMenu()
+            }
+        }
     }
 
     @objc private func togglePlayback() {

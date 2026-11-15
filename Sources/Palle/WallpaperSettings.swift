@@ -89,6 +89,10 @@ public struct ShaderUniforms {
     public var useTrueColor: Int32
     public var fgColor: SIMD4<Float>
     public var bgColor: SIMD4<Float>
+    public var textAspect: Float
+    public var textHalfW: Float
+    public var textHalfH: Float
+    public var hasCustomTextSDF: Int32
 }
 
 public final class WallpaperConfig: ObservableObject {
@@ -123,4 +127,12 @@ public final class WallpaperConfig: ObservableObject {
         get { customImageName }
         set { customImageName = newValue }
     }
+
+    // Custom 3D Text Hologram Support
+    @Published public var custom3DText: String = "MYTH"
+    public var textSDFTexture: MTLTexture?
+    @Published public var textAspect: Float = 2.0
+    @Published public var textHalfW: Float = 1.15
+    @Published public var textHalfH: Float = 0.42
+    @Published public var hasCustomTextSDF: Bool = false
 }
