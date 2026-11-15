@@ -70,6 +70,13 @@ public enum DetailResolution: CGFloat, CaseIterable {
     }
 }
 
+public enum CustomMediaType: String, Codable {
+    case none
+    case image
+    case video
+    case gif
+}
+
 public struct ShaderUniforms {
     public var resolution: SIMD2<Float>
     public var cellSize: SIMD2<Float>
@@ -97,9 +104,23 @@ public final class WallpaperConfig: ObservableObject {
     @Published public var fgColor: SIMD4<Float> = SIMD4<Float>(1.00, 0.85, 0.25, 1.0) // Imperial Cyber Gold
     @Published public var bgColor: SIMD4<Float> = SIMD4<Float>(0.07, 0.02, 0.12, 1.0) // Deep Royal Amethyst
 
-    // Custom Media Wallpaper Support
+    // Custom Media Wallpaper Support (Images, Videos, GIFs)
     public var customImageTexture: MTLTexture?
-    @Published public var isCustomImageActive: Bool = false
+    @Published public var customMediaType: CustomMediaType = .none
     @Published public var useTrueColor: Bool = true
     @Published public var customImageName: String?
+
+    public var isCustomMediaActive: Bool {
+        return customMediaType != .none
+    }
+
+    public var isCustomImageActive: Bool {
+        get { customMediaType != .none }
+        set { if !newValue { customMediaType = .none } }
+    }
+
+    public var customMediaName: String? {
+        get { customImageName }
+        set { customImageName = newValue }
+    }
 }

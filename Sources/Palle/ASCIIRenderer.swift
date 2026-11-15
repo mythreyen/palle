@@ -115,7 +115,16 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
         let cellW = Float(max(config.fontSize * 0.75, 5.0)) * scale
         let cellH = Float(max(config.fontSize * 1.35, 8.0)) * scale
 
-        let isMedia = (config.isCustomImageActive && config.customImageTexture != nil) ? Int32(1) : Int32(0)
+        var activeMediaTexture: MTLTexture? = nil
+        if config.isCustomMediaActive {
+            if config.customMediaType == .video || config.customMediaType == .gif {
+                activeMediaTexture = MediaPlaybackEngine.shared.currentFrameTexture()
+            } else {
+                activeMediaTexture = config.customImageTexture
+            }
+        }
+
+        let isMedia = (activeMediaTexture != nil) ? Int32(1) : Int32(0)
         let useTrueColor = config.useTrueColor ? Int32(1) : Int32(0)
 
         var uniforms = ShaderUniforms(
@@ -136,9 +145,7 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
         encoder.setFragmentBytes(&uniforms, length: MemoryLayout<ShaderUniforms>.stride, index: 0)
         encoder.setFragmentTexture(atlas, index: 0)
 
-        let mediaTex = (isMedia == 1 && config.customImageTexture != nil)
-            ? config.customImageTexture!
-            : fallbackMediaTexture!
+        let mediaTex = activeMediaTexture ?? fallbackMediaTexture!
         encoder.setFragmentTexture(mediaTex, index: 1)
 
         encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)

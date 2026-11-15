@@ -71,6 +71,12 @@ public final class DesktopWindowController {
     }
 
     public func setPaused(_ paused: Bool, targetFPS: Int) {
+        if paused {
+            MediaPlaybackEngine.shared.pause()
+        } else {
+            MediaPlaybackEngine.shared.resume()
+        }
+
         for view in views {
             if view.isPaused != paused {
                 view.isPaused = paused
