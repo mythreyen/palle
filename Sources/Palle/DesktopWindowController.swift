@@ -34,6 +34,8 @@ public final class DesktopWindowController {
             return
         }
 
+        CustomWallpaperManager.shared.restoreSavedWallpaperIfAny(device: device)
+
         let desktopLevel = Int(CGWindowLevelForKey(.desktopWindow))
 
         for screen in NSScreen.screens {
@@ -69,6 +71,12 @@ public final class DesktopWindowController {
     }
 
     public func setPaused(_ paused: Bool, targetFPS: Int) {
+        if paused {
+            MediaPlaybackEngine.shared.pause()
+        } else {
+            MediaPlaybackEngine.shared.resume()
+        }
+
         for view in views {
             if view.isPaused != paused {
                 view.isPaused = paused

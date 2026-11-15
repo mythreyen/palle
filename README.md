@@ -13,6 +13,8 @@ I built Palle as a personal Mac wallpaper that renders real time 3D scenes into 
 
 ## ✨ Features
 
+* **📁 Custom Image-to-ASCII Wallpaper:** Load any image (`.png`, `.jpg`, `.heic`, `.webp`) from Finder via native `NSOpenPanel` or `Cmd+O`. Automatically applies Aspect-Fill centering and transforms photos into dynamic ASCII art.
+* **🎨 True Color & Theme Tinting:** Toggle between the source photo's original RGB colors or tinting the characters with Palle's vibrant color themes (Matrix Mint, Amber CRT, Mythic Amethyst & Gold, etc.).
 * **⚡ Cell-Center Quantized 3D Raymarching:** Fuses 3D signed-distance field (SDF) evaluation and glyph texturing into a single render pass with 100% thread coherency across Apple Silicon GPU cores.
 * **🔬 Real-Time Detail & Resolution Scaling:** Switch live between 4 resolution presets:
   * **Ultra-High Detail (9pt):** 25,000+ simultaneous glyph cells capturing fine curves and thin rings.

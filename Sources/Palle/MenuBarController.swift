@@ -39,8 +39,62 @@ public final class MenuBarController: NSObject {
             let item = NSMenuItem(title: scene.displayName, action: #selector(selectScene(_:)), keyEquivalent: "")
             item.target = self
             item.tag = Int(scene.rawValue)
-            item.state = (config.scene == scene) ? .on : .off
+            item.state = (!config.isCustomImageActive && config.scene == scene) ? .on : .off
             menu.addItem(item)
+        }
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Custom Wallpaper Section
+        let customHeader = NSMenuItem(title: "Custom Wallpaper", action: nil, keyEquivalent: "")
+        customHeader.isEnabled = false
+        menu.addItem(customHeader)
+
+        let chooseTitle: String
+        if config.isCustomMediaActive {
+            let typeTag: String
+            switch config.customMediaType {
+            case .video: typeTag = "Video"
+            case .gif: typeTag = "GIF"
+            case .image: typeTag = "Image"
+            case .none: typeTag = "Active"
+            }
+            chooseTitle = "📁 Change Wallpaper... (\(config.customMediaName ?? "Active") • \(typeTag))"
+        } else {
+            chooseTitle = "📁 Choose Custom Wallpaper (Image, Video, GIF)..."
+        }
+
+        let chooseItem = NSMenuItem(title: chooseTitle, action: #selector(chooseCustomMedia), keyEquivalent: "o")
+        chooseItem.target = self
+        chooseItem.state = config.isCustomMediaActive ? .on : .off
+        menu.addItem(chooseItem)
+
+        // Play/Pause control for animated video/GIF loops
+        if config.customMediaType == .video || config.customMediaType == .gif {
+            let isPlaying = MediaPlaybackEngine.shared.isPlaying
+            let playTitle = isPlaying ? "⏸ Pause Playback" : "▶️ Resume Playback"
+            let playItem = NSMenuItem(title: playTitle, action: #selector(togglePlayback), keyEquivalent: "p")
+            playItem.target = self
+            menu.addItem(playItem)
+        }
+
+        let trueColorItem = NSMenuItem(
+            title: "🎨 True Color Mode (Source Media RGB)",
+            action: #selector(toggleTrueColor),
+            keyEquivalent: ""
+        )
+        trueColorItem.target = self
+        trueColorItem.state = config.useTrueColor ? .on : .off
+        menu.addItem(trueColorItem)
+
+        if config.isCustomMediaActive {
+            let clearItem = NSMenuItem(
+                title: "🗑️ Clear Custom Wallpaper (Back to 3D)",
+                action: #selector(clearCustomMedia),
+                keyEquivalent: ""
+            )
+            clearItem.target = self
+            menu.addItem(clearItem)
         }
 
         menu.addItem(NSMenuItem.separator())
@@ -132,8 +186,41 @@ public final class MenuBarController: NSObject {
     @objc private func selectScene(_ sender: NSMenuItem) {
         if let selected = SceneGeometry(rawValue: Int32(sender.tag)) {
             WallpaperConfig.shared.scene = selected
+            WallpaperConfig.shared.isCustomImageActive = false
             rebuildMenu()
         }
+    }
+
+    @objc private func chooseCustomMedia() {
+        guard let device = MTLCreateSystemDefaultDevice() else { return }
+        CustomWallpaperManager.shared.promptForCustomMedia(device: device) { [weak self] success in
+            if success {
+                self?.rebuildMenu()
+            }
+        }
+    }
+
+    @objc private func chooseCustomImage() {
+        chooseCustomMedia()
+    }
+
+    @objc private func togglePlayback() {
+        MediaPlaybackEngine.shared.togglePlayPause()
+        rebuildMenu()
+    }
+
+    @objc private func toggleTrueColor() {
+        WallpaperConfig.shared.useTrueColor.toggle()
+        rebuildMenu()
+    }
+
+    @objc private func clearCustomMedia() {
+        CustomWallpaperManager.shared.clearCustomWallpaper()
+        rebuildMenu()
+    }
+
+    @objc private func clearCustomImage() {
+        clearCustomMedia()
     }
 
     @objc private func selectPalette(_ sender: NSMenuItem) {
