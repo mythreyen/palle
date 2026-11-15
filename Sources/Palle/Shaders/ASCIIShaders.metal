@@ -14,6 +14,8 @@ struct Uniforms {
     int glyphCount;
     int sceneType;
     float cpuLoad;
+    int isCustomMedia;
+    int useTrueColor;
     float4 fgColor;
     float4 bgColor;
 };
@@ -334,7 +336,8 @@ float3 calcNormal(float3 p, constant Uniforms &u) {
 fragment float4 fragment_main(
     VertexOut in [[stage_in]],
     constant Uniforms &u [[buffer(0)]],
-    texture2d<float> fontAtlas [[texture(0)]]
+    texture2d<float> fontAtlas [[texture(0)]],
+    texture2d<float> mediaTexture [[texture(1)]]
 ) {
     constexpr sampler texSampler(mag_filter::linear, min_filter::linear, address::clamp_to_edge);
 
@@ -343,8 +346,44 @@ fragment float4 fragment_main(
     float2 cellIndex = floor(pixelPos / u.cellSize);
     float2 cellUV = fract(pixelPos / u.cellSize);
 
-    // Compute normalized screen coordinate (-1 to 1, aspect-corrected) for the center of the cell
     float2 cellCenterPx = (cellIndex + 0.5) * u.cellSize;
+
+    // Fast-path: Custom Media Wallpaper (Images, Photos)
+    if (u.isCustomMedia == 1) {
+        float mediaW = max(float(mediaTexture.get_width()), 1.0);
+        float mediaH = max(float(mediaTexture.get_height()), 1.0);
+        float screenAspect = u.resolution.x / max(u.resolution.y, 1.0);
+        float mediaAspect = mediaW / mediaH;
+
+        float2 mediaUV = cellCenterPx / u.resolution;
+        // Aspect Fill centering
+        if (screenAspect > mediaAspect) {
+            float scaleY = mediaAspect / screenAspect;
+            mediaUV.y = (mediaUV.y - 0.5) * scaleY + 0.5;
+        } else {
+            float scaleX = screenAspect / mediaAspect;
+            mediaUV.x = (mediaUV.x - 0.5) * scaleX + 0.5;
+        }
+
+        float4 mediaColor = mediaTexture.sample(texSampler, clamp(mediaUV, 0.0, 1.0));
+        float lum = dot(mediaColor.rgb, float3(0.299, 0.587, 0.114));
+
+        int glyphCount = max(u.glyphCount, 2);
+        int charIdx = clamp(int(lum * float(glyphCount)), 0, glyphCount - 1);
+
+        float atlasU = (float(charIdx) + cellUV.x) / float(glyphCount);
+        float2 atlasUV = float2(atlasU, cellUV.y);
+        float glyphAlpha = fontAtlas.sample(texSampler, atlasUV).r;
+
+        float3 charColor = (u.useTrueColor == 1)
+            ? mediaColor.rgb
+            : mix(u.fgColor.rgb * 0.45, u.fgColor.rgb * 1.35, lum);
+
+        float3 finalRGB = mix(u.bgColor.rgb, charColor, glyphAlpha);
+        return float4(finalRGB, 1.0);
+    }
+
+    // Normalized screen coordinate (-1 to 1, aspect-corrected) for 3D raymarching
     float2 ndc = (cellCenterPx / u.resolution) * 2.0 - 1.0;
     ndc.y = -ndc.y;
     ndc.x *= u.resolution.x / max(u.resolution.y, 1.0);
@@ -395,7 +434,6 @@ fragment float4 fragment_main(
 
         float fog = exp(-0.16 * t * t);
         float rawLuminance = (diff * 0.68 * ao + spec * 0.50 + rim * 0.42) * fog;
-        // Gamma tone mapping lifts shadow & midtone contours
         intensity = clamp(pow(rawLuminance, 0.82), 0.04, 0.999);
         depthGlow = rim;
 

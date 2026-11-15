@@ -1,4 +1,5 @@
 import Foundation
+import Metal
 import simd
 
 public enum CharacterPalette: String, CaseIterable {
@@ -77,6 +78,8 @@ public struct ShaderUniforms {
     public var glyphCount: Int32
     public var sceneType: Int32
     public var cpuLoad: Float
+    public var isCustomMedia: Int32
+    public var useTrueColor: Int32
     public var fgColor: SIMD4<Float>
     public var bgColor: SIMD4<Float>
 }
@@ -93,4 +96,10 @@ public final class WallpaperConfig: ObservableObject {
     @Published public var selectedTheme: Int = 7 // Mythic Amethyst & Gold
     @Published public var fgColor: SIMD4<Float> = SIMD4<Float>(1.00, 0.85, 0.25, 1.0) // Imperial Cyber Gold
     @Published public var bgColor: SIMD4<Float> = SIMD4<Float>(0.07, 0.02, 0.12, 1.0) // Deep Royal Amethyst
+
+    // Custom Media Wallpaper Support
+    public var customImageTexture: MTLTexture?
+    @Published public var isCustomImageActive: Bool = false
+    @Published public var useTrueColor: Bool = true
+    @Published public var customImageName: String?
 }

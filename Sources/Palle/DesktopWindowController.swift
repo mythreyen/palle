@@ -34,6 +34,8 @@ public final class DesktopWindowController {
             return
         }
 
+        CustomWallpaperManager.shared.restoreSavedWallpaperIfAny(device: device)
+
         let desktopLevel = Int(CGWindowLevelForKey(.desktopWindow))
 
         for screen in NSScreen.screens {
