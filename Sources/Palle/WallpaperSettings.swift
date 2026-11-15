@@ -238,11 +238,18 @@ public final class WallpaperConfig: ObservableObject {
     @Published public var textHalfH: Float = 0.42
     @Published public var hasCustomTextSDF: Bool = false
 
+    public static let settingsChangedNotification = Notification.Name("PalleSettingsChangedNotification")
+
+    public func notifySettingsChanged() {
+        NotificationCenter.default.post(name: Self.settingsChangedNotification, object: nil)
+    }
+
     public func applyTheme(id: Int) {
         if let theme = ColorThemePreset.all.first(where: { $0.id == id }) {
             self.selectedTheme = id
             self.fgColor = theme.fg
             self.bgColor = theme.bg
+            notifySettingsChanged()
         }
     }
 }

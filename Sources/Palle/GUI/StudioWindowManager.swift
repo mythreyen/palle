@@ -39,7 +39,9 @@ public final class StudioWindowManager: NSObject, NSWindowDelegate {
             window.toolbarStyle = .unified
             window.isMovableByWindowBackground = true
             window.isReleasedWhenClosed = false
-            window.backgroundColor = .windowBackgroundColor
+            window.isOpaque = false
+            window.backgroundColor = .clear
+            window.hasShadow = true
             window.setFrameAutosaveName("PalleStudioWindow")
             window.delegate = self
             window.contentViewController = hostingController

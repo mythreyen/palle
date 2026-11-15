@@ -17,10 +17,26 @@ public final class DesktopWindowController {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSettingsChanged),
+            name: WallpaperConfig.settingsChangedNotification,
+            object: nil
+        )
     }
 
     @objc private func handleScreenChange() {
         rebuildDesktopWindows()
+    }
+
+    @objc private func handleSettingsChanged() {
+        let config = WallpaperConfig.shared
+        for view in views {
+            if view.preferredFramesPerSecond != config.preferredFPS {
+                view.preferredFramesPerSecond = config.preferredFPS
+            }
+        }
+        refreshAtlas()
     }
 
     public func rebuildDesktopWindows() {
