@@ -24,15 +24,19 @@ public final class StudioWindowManager: NSObject, NSWindowDelegate {
             let rootView = StudioView()
             let hostingController = NSHostingController(rootView: rootView)
 
+            let initialW: CGFloat = 880
+            let initialH: CGFloat = 600
+            let minW: CGFloat = 780
+            let minH: CGFloat = 520
+
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 960, height: 660),
+                contentRect: NSRect(x: 0, y: 0, width: initialW, height: initialH),
                 styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
                 backing: .buffered,
                 defer: false
             )
 
-            window.center()
-            window.minSize = NSSize(width: 860, height: 560)
+            window.minSize = NSSize(width: minW, height: minH)
             window.title = "Palle Studio"
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
@@ -42,9 +46,25 @@ public final class StudioWindowManager: NSObject, NSWindowDelegate {
             window.isOpaque = false
             window.backgroundColor = .clear
             window.hasShadow = true
-            window.setFrameAutosaveName("PalleStudioWindow")
             window.delegate = self
             window.contentViewController = hostingController
+
+            // Responsive multi-display positioning & boundary clamp
+            if !window.setFrameUsingName("PalleStudioWindow") {
+                window.center()
+            }
+            if let screen = NSScreen.main {
+                let vis = screen.visibleFrame
+                var f = window.frame
+                if f.width > vis.width { f.size.width = max(minW, vis.width - 40) }
+                if f.height > vis.height { f.size.height = max(minH, vis.height - 40) }
+                if f.maxY > vis.maxY { f.origin.y = vis.maxY - f.height }
+                if f.minY < vis.minY { f.origin.y = vis.minY }
+                if f.minX < vis.minX { f.origin.x = vis.minX }
+                if f.maxX > vis.maxX { f.origin.x = vis.maxX - f.width }
+                window.setFrame(f, display: false)
+            }
+            window.setFrameAutosaveName("PalleStudioWindow")
 
             let controller = NSWindowController(window: window)
             self.windowController = controller

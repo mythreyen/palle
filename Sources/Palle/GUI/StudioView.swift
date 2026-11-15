@@ -47,7 +47,7 @@ public struct StudioView: View {
             HStack(spacing: 0) {
                 // Glass Sidebar
                 sidebarView
-                    .frame(width: 230)
+                    .frame(width: 220)
                     .background(VisualEffectView(material: .sidebar, blendingMode: .behindWindow))
 
                 Divider()
@@ -55,9 +55,10 @@ public struct StudioView: View {
 
                 // Detail Content Area
                 detailContentView
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(minWidth: 920, minHeight: 600)
+        .frame(minWidth: 780, minHeight: 520)
         .onAppear {
             textInput = config.custom3DText
         }
@@ -66,6 +67,10 @@ public struct StudioView: View {
     // MARK: - Liquid Glass Sidebar
     private var sidebarView: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Window traffic light clearance
+            Spacer()
+                .frame(height: 38)
+
             // App Monogram Header
             HStack(spacing: 12) {
                 ZStack {
@@ -95,7 +100,7 @@ public struct StudioView: View {
                 }
             }
             .padding(.horizontal, 18)
-            .padding(.top, 24)
+            .padding(.top, 4)
             .padding(.bottom, 20)
 
             Divider()
@@ -206,7 +211,7 @@ public struct StudioView: View {
             // Hero Live Mini Viewport Vitrine
             heroViewportVitrine
                 .padding(.horizontal, 22)
-                .padding(.top, 18)
+                .padding(.top, 38)
                 .padding(.bottom, 14)
 
             Divider()
@@ -229,6 +234,7 @@ public struct StudioView: View {
                     }
                 }
                 .padding(22)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -341,7 +347,7 @@ public struct StudioView: View {
                     .foregroundColor(.secondary)
             }
 
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 14)], spacing: 14) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300), spacing: 14)], spacing: 14) {
                 ForEach(SceneGeometry.allCases, id: \.rawValue) { scene in
                     sceneLiquidCard(scene: scene)
                 }
@@ -689,7 +695,7 @@ public struct StudioView: View {
                         .foregroundColor(.secondary)
                 }
 
-                HStack(spacing: 24) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 16)], spacing: 12) {
                     telemetryItem(label: "Current Word", value: config.custom3DText)
                     telemetryItem(label: "Glyph Count", value: "\(config.custom3DText.count) chars")
                     telemetryItem(label: "Aspect Ratio", value: String(format: "%.2f : 1", config.textAspect))
@@ -739,7 +745,7 @@ public struct StudioView: View {
                         .foregroundColor(.secondary)
                 }
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 12)], spacing: 12) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180, maximum: 280), spacing: 12)], spacing: 12) {
                     ForEach(ColorThemePreset.all) { theme in
                         colorThemeLiquidCard(theme: theme)
                     }
@@ -759,7 +765,7 @@ public struct StudioView: View {
                         .foregroundColor(.secondary)
                 }
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 12)], spacing: 12) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300), spacing: 12)], spacing: 12) {
                     ForEach(CharacterPalette.allCases, id: \.rawValue) { palette in
                         paletteLiquidCard(palette: palette)
                     }
@@ -957,7 +963,7 @@ public struct StudioView: View {
                         .font(.system(size: 12, weight: .bold))
                 }
 
-                HStack(spacing: 24) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 16)], spacing: 12) {
                     telemetryItem(label: "Metal GPU", value: MTLCreateSystemDefaultDevice()?.name ?? "Apple Metal")
                     telemetryItem(label: "Pixel Format", value: "BGRA8Unorm")
                     telemetryItem(label: "Memory Footprint", value: "< 30 MB")

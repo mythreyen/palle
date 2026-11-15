@@ -98,11 +98,14 @@ public final class ASCIIRenderer: NSObject, MTKViewDelegate {
 
     private func setupMouseTracking() {
         NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved, .leftMouseDragged]) { [weak self] _ in
-            guard WallpaperConfig.shared.mouseParallaxEnabled,
-                  let screen = NSScreen.main else { return }
+            guard WallpaperConfig.shared.mouseParallaxEnabled else { return }
             let loc = NSEvent.mouseLocation
-            let nx = Float(max(0.0, min(1.0, loc.x / max(screen.frame.width, 1.0))))
-            let ny = Float(max(0.0, min(1.0, loc.y / max(screen.frame.height, 1.0))))
+            let targetScreen = NSScreen.screens.first(where: { NSPointInRect(loc, $0.frame) }) ?? NSScreen.main
+            guard let screen = targetScreen else { return }
+            let localX = loc.x - screen.frame.origin.x
+            let localY = loc.y - screen.frame.origin.y
+            let nx = Float(max(0.0, min(1.0, localX / max(screen.frame.width, 1.0))))
+            let ny = Float(max(0.0, min(1.0, localY / max(screen.frame.height, 1.0))))
             self?.mouseNormalized = SIMD2<Float>(nx, ny)
         }
     }
