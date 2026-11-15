@@ -16,6 +16,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         powerMonitor.onPauseStateChanged = { [weak self] shouldPause, targetFPS in
             self?.desktopController.setPaused(shouldPause, targetFPS: targetFPS)
         }
+
+        // Present modern Palle Studio GUI window
+        StudioWindowManager.shared.show()
     }
 }
 

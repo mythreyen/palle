@@ -52,6 +52,34 @@ public enum SceneGeometry: Int32, CaseIterable {
         case .dnaHelix: return "🧬 3D Double Helix"
         }
     }
+
+    public var sfSymbol: String {
+        switch self {
+        case .mythHologram: return "sparkles.rectangle.stack"
+        case .mythPortal: return "circle.dashed.inset.filled"
+        case .torusKnot: return "circle.circle"
+        case .numberWave: return "waveform.path"
+        case .octoFractal: return "skew"
+        case .christmasTree: return "tree.fill"
+        case .warpTunnel: return "timelapse"
+        case .pulsingGyroid: return "rhombus.fill"
+        case .dnaHelix: return "atom"
+        }
+    }
+
+    public var category: String {
+        switch self {
+        case .mythHologram: return "Astrolabe & Holographic 3D"
+        case .mythPortal: return "Relativistic Singularity & Accretion"
+        case .torusKnot: return "Dual Toroidal Surface Ribs"
+        case .numberWave: return "Topological Harmonic Matrix"
+        case .octoFractal: return "Morphing Octahedral Lattice"
+        case .christmasTree: return "Raymarched Pine & Stars"
+        case .warpTunnel: return "Hyperspace Speed Ribs"
+        case .pulsingGyroid: return "Two-Scale Gyroid Crystal"
+        case .dnaHelix: return "Double Stranded Nucleic Helix"
+        }
+    }
 }
 
 public enum DetailResolution: CGFloat, CaseIterable {
@@ -75,6 +103,80 @@ public enum CustomMediaType: String, Codable {
     case image
     case video
     case gif
+}
+
+public struct ColorThemePreset: Identifiable, Equatable {
+    public let id: Int
+    public let name: String
+    public let fg: SIMD4<Float>
+    public let bg: SIMD4<Float>
+    public let description: String
+
+    public static let all: [ColorThemePreset] = [
+        ColorThemePreset(
+            id: 0,
+            name: "Matrix Mint",
+            fg: SIMD4<Float>(0.15, 0.95, 0.65, 1.0),
+            bg: SIMD4<Float>(0.03, 0.04, 0.06, 1.0),
+            description: "Phosphor terminal green on deep shadow black"
+        ),
+        ColorThemePreset(
+            id: 1,
+            name: "Amber CRT",
+            fg: SIMD4<Float>(1.00, 0.72, 0.18, 1.0),
+            bg: SIMD4<Float>(0.06, 0.04, 0.02, 1.0),
+            description: "Vintage retro amber CRT glow"
+        ),
+        ColorThemePreset(
+            id: 2,
+            name: "Cyber Cyan",
+            fg: SIMD4<Float>(0.20, 0.85, 1.00, 1.0),
+            bg: SIMD4<Float>(0.02, 0.04, 0.09, 1.0),
+            description: "High-voltage neon cyan on midnight blue"
+        ),
+        ColorThemePreset(
+            id: 3,
+            name: "Monochrome Paper",
+            fg: SIMD4<Float>(0.92, 0.94, 0.96, 1.0),
+            bg: SIMD4<Float>(0.07, 0.07, 0.08, 1.0),
+            description: "Clean minimalist newspaper monochrome"
+        ),
+        ColorThemePreset(
+            id: 4,
+            name: "Holiday Evergreen",
+            fg: SIMD4<Float>(0.22, 0.94, 0.48, 1.0),
+            bg: SIMD4<Float>(0.12, 0.02, 0.04, 1.0),
+            description: "Festive pine green on winter black cherry"
+        ),
+        ColorThemePreset(
+            id: 5,
+            name: "Winter Frost",
+            fg: SIMD4<Float>(0.65, 0.92, 1.00, 1.0),
+            bg: SIMD4<Float>(0.02, 0.05, 0.12, 1.0),
+            description: "Glacial ice blue on polar arctic night"
+        ),
+        ColorThemePreset(
+            id: 6,
+            name: "Neon Sunset",
+            fg: SIMD4<Float>(1.00, 0.35, 0.75, 1.0),
+            bg: SIMD4<Float>(0.08, 0.02, 0.12, 1.0),
+            description: "Synthwave hot pink on dark twilight violet"
+        ),
+        ColorThemePreset(
+            id: 7,
+            name: "Mythic Amethyst & Gold",
+            fg: SIMD4<Float>(1.00, 0.85, 0.25, 1.0),
+            bg: SIMD4<Float>(0.07, 0.02, 0.12, 1.0),
+            description: "Imperial Cyber Gold on Royal Amethyst"
+        ),
+        ColorThemePreset(
+            id: 8,
+            name: "Mythic Crimson Cyber",
+            fg: SIMD4<Float>(1.00, 0.18, 0.38, 1.0),
+            bg: SIMD4<Float>(0.02, 0.04, 0.09, 1.0),
+            description: "Laser red overdrive on obsidian slate"
+        )
+    ]
 }
 
 public struct ShaderUniforms {
@@ -135,4 +237,12 @@ public final class WallpaperConfig: ObservableObject {
     @Published public var textHalfW: Float = 1.15
     @Published public var textHalfH: Float = 0.42
     @Published public var hasCustomTextSDF: Bool = false
+
+    public func applyTheme(id: Int) {
+        if let theme = ColorThemePreset.all.first(where: { $0.id == id }) {
+            self.selectedTheme = id
+            self.fgColor = theme.fg
+            self.bgColor = theme.bg
+        }
+    }
 }

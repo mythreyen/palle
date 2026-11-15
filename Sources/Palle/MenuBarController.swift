@@ -28,6 +28,10 @@ public final class MenuBarController: NSObject {
         let titleItem = NSMenuItem(title: "Palle — MYTH Edition", action: nil, keyEquivalent: "")
         titleItem.isEnabled = false
         menu.addItem(titleItem)
+
+        let studioItem = NSMenuItem(title: "🎛 Open Palle Studio...", action: #selector(openStudio), keyEquivalent: ",")
+        studioItem.target = self
+        menu.addItem(studioItem)
         menu.addItem(NSMenuItem.separator())
 
         // 3D Geometry Selector
@@ -194,6 +198,10 @@ public final class MenuBarController: NSObject {
         statusItem.menu = menu
     }
 
+    @objc private func openStudio() {
+        StudioWindowManager.shared.show()
+    }
+
     @objc private func selectScene(_ sender: NSMenuItem) {
         if let selected = SceneGeometry(rawValue: Int32(sender.tag)) {
             WallpaperConfig.shared.scene = selected
@@ -259,39 +267,7 @@ public final class MenuBarController: NSObject {
     }
 
     @objc private func selectColorTheme(_ sender: NSMenuItem) {
-        let config = WallpaperConfig.shared
-        config.selectedTheme = sender.tag
-        switch sender.tag {
-        case 0: // Matrix Mint
-            config.fgColor = SIMD4<Float>(0.15, 0.95, 0.65, 1.0)
-            config.bgColor = SIMD4<Float>(0.03, 0.04, 0.06, 1.0)
-        case 1: // Amber CRT
-            config.fgColor = SIMD4<Float>(1.00, 0.72, 0.18, 1.0)
-            config.bgColor = SIMD4<Float>(0.06, 0.04, 0.02, 1.0)
-        case 2: // Cyber Cyan
-            config.fgColor = SIMD4<Float>(0.20, 0.85, 1.00, 1.0)
-            config.bgColor = SIMD4<Float>(0.02, 0.04, 0.09, 1.0)
-        case 3: // Monochrome Paper
-            config.fgColor = SIMD4<Float>(0.92, 0.94, 0.96, 1.0)
-            config.bgColor = SIMD4<Float>(0.07, 0.07, 0.08, 1.0)
-        case 4: // Holiday Evergreen (Vibrant Pine Green on Deep Crimson/Black)
-            config.fgColor = SIMD4<Float>(0.22, 0.94, 0.48, 1.0)
-            config.bgColor = SIMD4<Float>(0.12, 0.02, 0.04, 1.0)
-        case 5: // Winter Frost (Glacial Ice Blue on Polar Midnight)
-            config.fgColor = SIMD4<Float>(0.65, 0.92, 1.00, 1.0)
-            config.bgColor = SIMD4<Float>(0.02, 0.05, 0.12, 1.0)
-        case 6: // Neon Sunset (Synthwave Pink on Dark Violet)
-            config.fgColor = SIMD4<Float>(1.00, 0.35, 0.75, 1.0)
-            config.bgColor = SIMD4<Float>(0.08, 0.02, 0.12, 1.0)
-        case 7: // Mythic Amethyst & Gold
-            config.fgColor = SIMD4<Float>(1.00, 0.85, 0.25, 1.0)
-            config.bgColor = SIMD4<Float>(0.07, 0.02, 0.12, 1.0)
-        case 8: // Mythic Crimson Cyber
-            config.fgColor = SIMD4<Float>(1.00, 0.18, 0.38, 1.0)
-            config.bgColor = SIMD4<Float>(0.02, 0.04, 0.09, 1.0)
-        default:
-            break
-        }
+        WallpaperConfig.shared.applyTheme(id: sender.tag)
         rebuildMenu()
     }
 
