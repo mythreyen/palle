@@ -73,7 +73,7 @@ public final class PowerAndOcclusionMonitor {
     /// Inspects on-screen windows above the desktop layer. If any single standard window covers
     /// >= 92% of the main screen's visible frame, we pause Metal rendering automatically.
     private func isDesktopMostlyOccluded() -> Bool {
-        guard let mainScreen = NSScreen.main else { return false }
+        guard let mainScreen = NSScreen.main, let primary = NSScreen.screens.first else { return false }
         let screenArea = mainScreen.frame.width * mainScreen.frame.height
         guard screenArea > 0 else { return false }
 
@@ -83,6 +83,7 @@ public final class PowerAndOcclusionMonitor {
         }
 
         let myPID = ProcessInfo.processInfo.processIdentifier
+        let primaryHeight = primary.frame.height
 
         for entry in windowList {
             guard let ownerPID = entry[kCGWindowOwnerPID as String] as? pid_t,
@@ -97,14 +98,14 @@ public final class PowerAndOcclusionMonitor {
                 continue
             }
 
-            let rect = CGRect(
-                x: boundsDict["X"] ?? 0,
-                y: boundsDict["Y"] ?? 0,
-                width: w,
-                height: h
-            )
+            let cgX = boundsDict["X"] ?? 0
+            let cgY = boundsDict["Y"] ?? 0
+            // Convert CoreGraphics top-left to Cocoa bottom-left coordinate space
+            let cocoaY = primaryHeight - (cgY + h)
+            let rect = CGRect(x: cgX, y: cocoaY, width: w, height: h)
+
             let intersection = rect.intersection(mainScreen.frame)
-            let coveredArea = intersection.width * intersection.height
+            let coveredArea = max(0, intersection.width) * max(0, intersection.height)
 
             if (coveredArea / screenArea) >= 0.92 {
                 return true

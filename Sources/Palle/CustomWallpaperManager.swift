@@ -33,6 +33,7 @@ public final class CustomWallpaperManager {
             panel.allowsMultipleSelection = false
             panel.canChooseDirectories = false
             panel.canCreateDirectories = false
+            panel.level = .floating
 
             NSApp.activate(ignoringOtherApps: true)
 

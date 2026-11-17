@@ -4,17 +4,25 @@ import MetalKit
 /// Manages one borderless, click-through `NSWindow` per connected `NSScreen`, positioned at
 /// `kCGDesktopWindowLevelKey` so desktop icons and regular windows float naturally above it.
 public final class DesktopWindowController {
+    public static var shared: DesktopWindowController?
 
     private var windows: [NSWindow] = []
     private var views: [MTKView] = []
     private var renderers: [ASCIIRenderer] = []
 
     public init() {
+        DesktopWindowController.shared = self
         rebuildDesktopWindows()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleScreenChange),
             name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSettingsChanged),
+            name: WallpaperConfig.settingsChangedNotification,
             object: nil
         )
     }
@@ -23,8 +31,26 @@ public final class DesktopWindowController {
         rebuildDesktopWindows()
     }
 
+    @objc private func handleSettingsChanged() {
+        let config = WallpaperConfig.shared
+        for view in views {
+            if view.preferredFramesPerSecond != config.preferredFPS {
+                view.preferredFramesPerSecond = config.preferredFPS
+            }
+        }
+        refreshAtlas()
+    }
+
     public func rebuildDesktopWindows() {
-        windows.forEach { $0.orderOut(nil) }
+        for view in views {
+            view.isPaused = true
+            view.delegate = nil
+        }
+        for window in windows {
+            window.contentView = nil
+            window.orderOut(nil)
+            window.close()
+        }
         windows.removeAll()
         views.removeAll()
         renderers.removeAll()
@@ -35,11 +61,16 @@ public final class DesktopWindowController {
         }
 
         CustomWallpaperManager.shared.restoreSavedWallpaperIfAny(device: device)
+        CustomTextManager.shared.restoreSavedTextIfAny(device: device)
 
         let desktopLevel = Int(CGWindowLevelForKey(.desktopWindow))
 
         for screen in NSScreen.screens {
-            let mtkView = MTKView(frame: screen.frame, device: device)
+            // Use local coordinates for view bounds inside window
+            let localBounds = NSRect(origin: .zero, size: screen.frame.size)
+            let mtkView = MTKView(frame: localBounds, device: device)
+            mtkView.autoresizingMask = [.width, .height]
+            mtkView.autoResizeDrawable = true
             mtkView.preferredFramesPerSecond = WallpaperConfig.shared.preferredFPS
             mtkView.enableSetNeedsDisplay = false
             mtkView.isPaused = false
