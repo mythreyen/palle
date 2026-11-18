@@ -1,4 +1,4 @@
-# Palle ⚡️
+# Palle
 
 > Dynamic 3D Text, Number, and ASCII Art Wallpaper Engine for macOS
 
@@ -11,48 +11,48 @@ I built Palle as a personal Mac wallpaper that renders real time 3D scenes into 
 
 ---
 
-## ✨ Features
+## Features
 
-* **📁 Custom Image-to-ASCII Wallpaper:** Load any image (`.png`, `.jpg`, `.heic`, `.webp`) from Finder via native `NSOpenPanel` or `Cmd+O`. Automatically applies Aspect-Fill centering and transforms photos into dynamic ASCII art.
-* **🎨 True Color & Theme Tinting:** Toggle between the source photo's original RGB colors or tinting the characters with Palle's vibrant color themes (Matrix Mint, Amber CRT, Mythic Amethyst & Gold, etc.).
-* **⚡ Cell-Center Quantized 3D Raymarching:** Fuses 3D signed-distance field (SDF) evaluation and glyph texturing into a single render pass with 100% thread coherency across Apple Silicon GPU cores.
-* **🔬 Real-Time Detail & Resolution Scaling:** Switch live between 4 resolution presets:
+* **Custom Image-to-ASCII Wallpaper:** Load any image (`.png`, `.jpg`, `.heic`, `.webp`) from Finder via native `NSOpenPanel` or `Cmd+O`. Automatically applies Aspect-Fill centering and transforms photos into dynamic ASCII art.
+* **True Color & Theme Tinting:** Toggle between the source photo's original RGB colors or tinting the characters with Palle's vibrant color themes (Matrix Mint, Amber CRT, Mythic Amethyst & Gold, etc.).
+* **Cell-Center Quantized 3D Raymarching:** Fuses 3D signed-distance field (SDF) evaluation and glyph texturing into a single render pass with 100% thread coherency across Apple Silicon GPU cores.
+* **Real-Time Detail & Resolution Scaling:** Switch live between 4 resolution presets:
   * **Ultra-High Detail (9pt):** 25,000+ simultaneous glyph cells capturing fine curves and thin rings.
   * **High Detail (12pt):** Balanced high-definition contours and smooth gradients.
   * **Standard ASCII (16pt):** Classic retro terminal density.
   * **Retro Chunky (22pt):** Bold cyberpunk character blocks.
-* **💡 Cinematic 3D Lighting Engine:** 4-tap cone-traced Ambient Occlusion (AO), Blinn-Phong specular glints, chromatic Fresnel rim lighting, and gamma-mapped tone curves.
-* **🎨 Runtime CoreText Font Atlas:** Single-channel grayscale `.r8Unorm` texture strip generated on the fly at true Retina pixel scale in under 2ms.
-* **🖱️ Interactive Mouse Parallax:** Procedural 3D perspective tilt that tracks cursor movement across your screen without stealing window focus or intercepting clicks.
-* **🔋 3-Tier Battery & Power Guard:**
+* **Cinematic 3D Lighting Engine:** 4-tap cone-traced Ambient Occlusion (AO), Blinn-Phong specular glints, chromatic Fresnel rim lighting, and gamma-mapped tone curves.
+* **Runtime CoreText Font Atlas:** Single-channel grayscale `.r8Unorm` texture strip generated on the fly at true Retina pixel scale in under 2ms.
+* **Interactive Mouse Parallax:** Procedural 3D perspective tilt that tracks cursor movement across your screen without stealing window focus or intercepting clicks.
+* **3-Tier Battery & Power Guard:**
   * **Desktop Occlusion Detection:** Automatically pauses rendering (0.0% GPU usage) whenever standard application windows cover 92% or more of the screen.
   * **Low Power Mode Adaptation:** Steps down frame rates from 60 FPS to 24 FPS automatically when battery saver is engaged.
   * **Display Sleep Hook:** Freezes render loops the moment your display sleeps or the lid closes.
-* **🖥️ Multi-Monitor Desktop Layer Integration:** Renders smoothly behind Finder desktop icons (`kCGDesktopWindowLevelKey`), supporting drag-selection, right-clicks, and Mission Control Spaces without Dock icon clutter.
+* **Multi-Monitor Desktop Layer Integration:** Renders smoothly behind Finder desktop icons (`kCGDesktopWindowLevelKey`), supporting drag-selection, right-clicks, and Mission Control Spaces without Dock icon clutter.
 
 ---
 
-## 🌌 3D Scenes & Animations
+## 3D Scenes & Animations
 
-1. **⚡️ 3D MYTH Cyber Hologram:** Floating extruded 3D monogram with inner beveled neon grooves, 32-tick laser-engraved astrolabe gyro-rings, and dual orbiting plasma beacons.
-2. **🌌 3D MYTH Cosmic Wormhole:** Relativistic Kerr black hole with Doppler-brightened accretion disk, photon sphere ring, and floating central crest.
-3. **🎄 3D Christmas Tree & Snow:** 4-tier pine canopy with needle displacement, grooved trunk, 8-point faceted star topper, and real-time drifting snowflakes.
-4. **🌀 Cyber Warp Tunnel:** Retro-futuristic hyperspace tunnel with undulating walls, longitudinal speed tracks, and glowing acceleration ribs.
-5. **💎 Pulsing Gyroid Crystal:** Multi-scale harmonic fractal gyroid minimal surface blooming inside a faceted sphere.
-6. **🧬 3D Double Helix:** Rotating DNA molecule with major and minor grooves connected by periodic base-pair ladder rungs.
+1. **3D MYTH Cyber Hologram:** Floating extruded 3D monogram with inner beveled neon grooves, 32-tick laser-engraved astrolabe gyro-rings, and dual orbiting plasma beacons.
+2. **3D MYTH Cosmic Wormhole:** Relativistic Kerr black hole with Doppler-brightened accretion disk, photon sphere ring, and floating central crest.
+3. **3D Christmas Tree & Snow:** 4-tier pine canopy with needle displacement, grooved trunk, 8-point faceted star topper, and real-time drifting snowflakes.
+4. **Cyber Warp Tunnel:** Retro-futuristic hyperspace tunnel with undulating walls, longitudinal speed tracks, and glowing acceleration ribs.
+5. **Pulsing Gyroid Crystal:** Multi-scale harmonic fractal gyroid minimal surface blooming inside a faceted sphere.
+6. **3D Double Helix:** Rotating DNA molecule with major and minor grooves connected by periodic base-pair ladder rungs.
 7. **3D Torus Knot:** Dual interlocking tori with sinusoidal surface micro-displacement.
 8. **Topological Number Wave:** Flowing multi-frequency trigonometric wave matrix.
 9. **Morphing Octahedron:** Smooth geometric interpolation between an octahedron and sphere.
 
 ---
 
-## 🎨 Palettes & Color Themes
+## Palettes & Color Themes
 
 ### Character Palettes
-* `⚡️ MYTH Cyber Stream`: ` MYTHmyth0123456789::*#@`
-* `👑 Pure MYTH Typography`: ` MYTH`
-* `❄️ Holiday Snow & Stars`: ` .·*+oO#@▲★❄`
-* `🎄 Festive ASCII Art`: ` .*+o8#@^~|`
+* `MYTH Cyber Stream`: ` MYTHmyth0123456789::*#@`
+* `Pure MYTH Typography`: ` MYTH`
+* `Holiday Snow & Stars`: ` .·*+oO#@▲★❄`
+* `Festive ASCII Art`: ` .*+o8#@^~|`
 * `Classic ASCII Density`: ` .:-=+*#%@`
 * `3D Number Grid`: ` 0123456789`
 * `Binary Stream`: ` 01`
@@ -72,7 +72,7 @@ I built Palle as a personal Mac wallpaper that renders real time 3D scenes into 
 
 ---
 
-## 🚀 Quick Start & Build Instructions
+## Quick Start & Build Instructions
 
 ### Prerequisites
 * A Mac running **macOS 13.0 (Ventura)** or newer.
@@ -96,6 +96,6 @@ open build/Palle.app
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
