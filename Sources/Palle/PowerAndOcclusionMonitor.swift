@@ -70,11 +70,13 @@ public final class PowerAndOcclusionMonitor {
         }
     }
 
-    /// Inspects on-screen windows above the desktop layer. If any single standard window covers
-    /// >= 92% of the main screen's visible frame, we pause Metal rendering automatically.
+    /// Inspects on-screen windows above the desktop layer. If application windows cover >= 90%
+    /// of the main screen (whether by a single window or tiled/split-screen windows),
+    /// we pause Metal rendering automatically to achieve 0.0% GPU load.
     private func isDesktopMostlyOccluded() -> Bool {
         guard let mainScreen = NSScreen.main, let primary = NSScreen.screens.first else { return false }
-        let screenArea = mainScreen.frame.width * mainScreen.frame.height
+        let screenFrame = mainScreen.frame
+        let screenArea = screenFrame.width * screenFrame.height
         guard screenArea > 0 else { return false }
 
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
@@ -84,6 +86,7 @@ public final class PowerAndOcclusionMonitor {
 
         let myPID = ProcessInfo.processInfo.processIdentifier
         let primaryHeight = primary.frame.height
+        var appWindowRects: [CGRect] = []
 
         for entry in windowList {
             guard let ownerPID = entry[kCGWindowOwnerPID as String] as? pid_t,
@@ -91,10 +94,11 @@ public final class PowerAndOcclusionMonitor {
                   let layer = entry[kCGWindowLayer as String] as? Int,
                   layer == 0, // Standard application window layer
                   let alpha = entry[kCGWindowAlpha as String] as? CGFloat,
-                  alpha > 0.9,
+                  alpha > 0.85,
                   let boundsDict = entry[kCGWindowBounds as String] as? [String: CGFloat],
                   let w = boundsDict["Width"],
-                  let h = boundsDict["Height"] else {
+                  let h = boundsDict["Height"],
+                  w > 50, h > 50 else {
                 continue
             }
 
@@ -104,13 +108,43 @@ public final class PowerAndOcclusionMonitor {
             let cocoaY = primaryHeight - (cgY + h)
             let rect = CGRect(x: cgX, y: cocoaY, width: w, height: h)
 
-            let intersection = rect.intersection(mainScreen.frame)
-            let coveredArea = max(0, intersection.width) * max(0, intersection.height)
+            let intersection = rect.intersection(screenFrame)
+            guard !intersection.isNull && intersection.width > 0 && intersection.height > 0 else { continue }
 
-            if (coveredArea / screenArea) >= 0.92 {
+            // Fast-path: single maximized window covering >= 90%
+            let coveredArea = intersection.width * intersection.height
+            if (coveredArea / screenArea) >= 0.90 {
                 return true
             }
+
+            appWindowRects.append(intersection)
         }
-        return false
+
+        guard !appWindowRects.isEmpty else { return false }
+
+        // Multi-window coverage test: 8x8 probe grid (64 sample points) across the screen
+        let cols = 8
+        let rows = 8
+        var coveredPoints = 0
+        let stepX = screenFrame.width / CGFloat(cols)
+        let stepY = screenFrame.height / CGFloat(rows)
+
+        for col in 0..<cols {
+            let px = screenFrame.minX + (CGFloat(col) + 0.5) * stepX
+            for row in 0..<rows {
+                let py = screenFrame.minY + (CGFloat(row) + 0.5) * stepY
+                let point = CGPoint(x: px, y: py)
+
+                for rect in appWindowRects {
+                    if rect.contains(point) {
+                        coveredPoints += 1
+                        break
+                    }
+                }
+            }
+        }
+
+        // If >= 90% (58 of 64) sample points are covered by windows, the desktop is occluded
+        return (Double(coveredPoints) / Double(cols * rows)) >= 0.90
     }
 }
