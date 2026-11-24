@@ -6,6 +6,9 @@ import SwiftUI
 public final class StudioWindowManager: NSObject, NSWindowDelegate {
     public static let shared = StudioWindowManager()
 
+    public static let didShowWindowNotification = Notification.Name("PalleStudioWindowDidShow")
+    public static let didHideWindowNotification = Notification.Name("PalleStudioWindowDidHide")
+
     private var windowController: NSWindowController?
 
     private override init() {
@@ -15,6 +18,8 @@ public final class StudioWindowManager: NSObject, NSWindowDelegate {
     /// Presents the Palle Studio window, bringing it to the key front.
     public func show() {
         DispatchQueue.main.async {
+            NotificationCenter.default.post(name: Self.didShowWindowNotification, object: nil)
+
             if let controller = self.windowController, let window = controller.window {
                 window.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
@@ -77,7 +82,7 @@ public final class StudioWindowManager: NSObject, NSWindowDelegate {
     /// Toggles visibility of the Studio window
     public func toggle() {
         if let window = windowController?.window, window.isVisible {
-            window.orderOut(nil)
+            hide()
         } else {
             show()
         }
@@ -85,10 +90,19 @@ public final class StudioWindowManager: NSObject, NSWindowDelegate {
 
     /// Closes the Studio window while preserving live wallpaper execution
     public func hide() {
+        NotificationCenter.default.post(name: Self.didHideWindowNotification, object: nil)
         windowController?.window?.orderOut(nil)
     }
 
     public func windowWillClose(_ notification: Notification) {
-        // Window remains in memory for instant subsequent presentations
+        NotificationCenter.default.post(name: Self.didHideWindowNotification, object: nil)
+    }
+
+    public func windowDidMiniaturize(_ notification: Notification) {
+        NotificationCenter.default.post(name: Self.didHideWindowNotification, object: nil)
+    }
+
+    public func windowDidDeminiaturize(_ notification: Notification) {
+        NotificationCenter.default.post(name: Self.didShowWindowNotification, object: nil)
     }
 }

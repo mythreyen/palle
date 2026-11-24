@@ -4,9 +4,9 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 public enum StudioTab: String, CaseIterable, Identifiable {
-    case scenes = "3D Scenes"
+    case scenes = "Animations"
     case media = "Custom Media"
-    case text3D = "3D Text"
+    case text3D = "Emblem Text"
     case appearance = "Appearance"
     case engine = "Engine & Display"
 
@@ -14,7 +14,7 @@ public enum StudioTab: String, CaseIterable, Identifiable {
 
     public var icon: String {
         switch self {
-        case .scenes: return "cube.transparent"
+        case .scenes: return "terminal.fill"
         case .media: return "photo.stack"
         case .text3D: return "character.cursor.ibeam"
         case .appearance: return "paintpalette"
@@ -268,7 +268,7 @@ public struct StudioView: View {
                             Circle()
                                 .fill(Color.red)
                                 .frame(width: 5, height: 5)
-                            Text("LIVE 60 FPS")
+                            Text("LIVE PREVIEW")
                                 .font(.system(size: 8, weight: .heavy, design: .monospaced))
                                 .foregroundColor(.white)
                         }
@@ -420,10 +420,8 @@ public struct StudioView: View {
     }
 
     private func sceneTitle(for scene: SceneGeometry) -> String {
-        if scene == .mythHologram && config.custom3DText != "MYTH" {
-            return "⚡️ 3D \"\(config.custom3DText)\" Cyber Hologram"
-        } else if scene == .mythPortal && config.custom3DText != "MYTH" {
-            return "🌌 3D \"\(config.custom3DText)\" Cosmic Wormhole"
+        if scene == .asciiBounce && config.custom3DText != "MYTH" {
+            return "📼 Bouncing \"\(config.custom3DText)\""
         }
         return scene.displayName
     }
@@ -722,10 +720,10 @@ public struct StudioView: View {
     private func apply3DText() {
         guard let device = MTLCreateSystemDefaultDevice() else { return }
         withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-            // If custom media is active or non-hologram scene, switch to 3D Hologram to show the extruded text immediately
+            // If custom media is active or non-emblem scene, switch to Bouncing ASCII Emblem to show the custom text immediately
             config.customMediaType = .none
-            if config.scene != .mythHologram && config.scene != .mythPortal {
-                config.scene = .mythHologram
+            if config.scene != .asciiBounce {
+                config.scene = .asciiBounce
             }
         }
         _ = CustomTextManager.shared.updateCustomText(textInput, device: device)
@@ -912,9 +910,10 @@ public struct StudioView: View {
                 }
 
                 Picker("Target FPS", selection: $config.preferredFPS) {
+                    Text("15 FPS (Ultra Low)").tag(15)
+                    Text("24 FPS (Cinematic)").tag(24)
                     Text("30 FPS (Power Saver)").tag(30)
                     Text("60 FPS (Smooth)").tag(60)
-                    Text("120 FPS (ProMotion Ultra)").tag(120)
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: config.preferredFPS) { _ in

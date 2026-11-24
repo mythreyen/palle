@@ -10,74 +10,54 @@ public enum CharacterPalette: String, CaseIterable {
     case binary = " 01"
     case hex = " 0123456789ABCDEF"
     case matrix = " 012345789Z:.*+=<>|¦"
-    case festive = " .·*+oO#@▲★❄"
-    case holidayASCII = " .*+o8#@^~|"
 
     public var displayName: String {
         switch self {
         case .mythMatrix: return "⚡️ MYTH Cyber Stream"
-        case .mythPure: return "👑 Pure MYTH Typography"
+        case .mythPure: return "👑 Pure Typography"
         case .asciiDensity: return "Classic ASCII Density"
         case .numbers: return "3D Number Grid (0-9)"
         case .binary: return "Binary Stream (0/1)"
         case .hex: return "Hexadecimal Telemetry"
         case .matrix: return "Cyberpunk Matrix"
-        case .festive: return "❄️ Holiday Snow & Stars"
-        case .holidayASCII: return "🎄 Festive ASCII Art"
         }
     }
 }
 
 public enum SceneGeometry: Int32, CaseIterable {
-    case mythHologram = 7
-    case mythPortal = 8
-    case torusKnot = 0
-    case numberWave = 1
-    case octoFractal = 2
-    case christmasTree = 3
-    case warpTunnel = 4
-    case pulsingGyroid = 5
-    case dnaHelix = 6
+    case matrixRain = 0
+    case starfield = 1
+    case audioWave = 2
+    case telemetryHex = 3
+    case asciiBounce = 4
 
     public var displayName: String {
         switch self {
-        case .mythHologram: return "⚡️ 3D MYTH Cyber Hologram"
-        case .mythPortal: return "🌌 3D MYTH Cosmic Wormhole"
-        case .torusKnot: return "3D Torus Knot"
-        case .numberWave: return "Topological Number Wave"
-        case .octoFractal: return "Morphing Octahedron"
-        case .christmasTree: return "🎄 3D Christmas Tree & Snow"
-        case .warpTunnel: return "🌀 Cyber Warp Tunnel"
-        case .pulsingGyroid: return "💎 Pulsing Gyroid Crystal"
-        case .dnaHelix: return "🧬 3D Double Helix"
+        case .matrixRain: return "🟢 Matrix Digital Rain"
+        case .starfield: return "✨ Retro Starfield"
+        case .audioWave: return "🌊 Sine Audio Waveform"
+        case .telemetryHex: return "💻 Telemetry Hex Stream"
+        case .asciiBounce: return "📼 Bouncing ASCII Emblem"
         }
     }
 
     public var sfSymbol: String {
         switch self {
-        case .mythHologram: return "sparkles.rectangle.stack"
-        case .mythPortal: return "circle.dashed.inset.filled"
-        case .torusKnot: return "circle.circle"
-        case .numberWave: return "waveform.path"
-        case .octoFractal: return "skew"
-        case .christmasTree: return "tree.fill"
-        case .warpTunnel: return "timelapse"
-        case .pulsingGyroid: return "rhombus.fill"
-        case .dnaHelix: return "atom"
+        case .matrixRain: return "rain.fill"
+        case .starfield: return "sparkles"
+        case .audioWave: return "waveform.path"
+        case .telemetryHex: return "curlybraces"
+        case .asciiBounce: return "arrow.up.left.and.down.right.and.arrow.up.right.and.down.left"
         }
     }
 
     public var category: String {
         switch self {
-        case .mythHologram: return "Astrolabe & Holographic 3D"
-        case .mythPortal: return "Relativistic Singularity & Accretion"
-        case .torusKnot: return "Dual Toroidal Surface Ribs"
-        case .numberWave: return "Topological Harmonic Matrix"
-        case .octoFractal: return "Morphing Octahedral Lattice"
-        case .christmasTree: return "Raymarched Pine & Stars"
-        case .warpTunnel: return "Hyperspace Speed Ribs"
-        case .pulsingGyroid: return "Two-Scale Gyroid Crystal"
-        case .dnaHelix: return "Double Stranded Nucleic Helix"
+        case .matrixRain: return "Digital Cascading Streams"
+        case .starfield: return "Deep Space Warp"
+        case .audioWave: return "Oscilloscope Waveform"
+        case .telemetryHex: return "Cyberpunk Memory Telemetry"
+        case .asciiBounce: return "Classic Retro Screensaver"
         }
     }
 }
@@ -142,13 +122,6 @@ public struct ColorThemePreset: Identifiable, Equatable {
             description: "Clean minimalist newspaper monochrome"
         ),
         ColorThemePreset(
-            id: 4,
-            name: "Holiday Evergreen",
-            fg: SIMD4<Float>(0.22, 0.94, 0.48, 1.0),
-            bg: SIMD4<Float>(0.12, 0.02, 0.04, 1.0),
-            description: "Festive pine green on winter black cherry"
-        ),
-        ColorThemePreset(
             id: 5,
             name: "Winter Frost",
             fg: SIMD4<Float>(0.65, 0.92, 1.00, 1.0),
@@ -200,15 +173,15 @@ public struct ShaderUniforms {
 public final class WallpaperConfig: ObservableObject {
     public static let shared = WallpaperConfig()
 
-    @Published public var palette: CharacterPalette = .mythMatrix
-    @Published public var scene: SceneGeometry = .mythHologram
-    @Published public var fontSize: CGFloat = 12.0 // Default to High Detail
-    @Published public var preferredFPS: Int = 60
+    @Published public var palette: CharacterPalette = .matrix
+    @Published public var scene: SceneGeometry = .matrixRain
+    @Published public var fontSize: CGFloat = 16.0 // Standard ASCII terminal density
+    @Published public var preferredFPS: Int = 30 // Lightweight balanced default
     @Published public var pauseWhenOccluded: Bool = true
     @Published public var mouseParallaxEnabled: Bool = true
-    @Published public var selectedTheme: Int = 7 // Mythic Amethyst & Gold
-    @Published public var fgColor: SIMD4<Float> = SIMD4<Float>(1.00, 0.85, 0.25, 1.0) // Imperial Cyber Gold
-    @Published public var bgColor: SIMD4<Float> = SIMD4<Float>(0.07, 0.02, 0.12, 1.0) // Deep Royal Amethyst
+    @Published public var selectedTheme: Int = 0 // Matrix Mint
+    @Published public var fgColor: SIMD4<Float> = SIMD4<Float>(0.15, 0.95, 0.65, 1.0) // Phosphor Terminal Green
+    @Published public var bgColor: SIMD4<Float> = SIMD4<Float>(0.03, 0.04, 0.06, 1.0) // Deep Shadow Black
 
     // Custom Media Wallpaper Support (Images, Videos, GIFs)
     public var customImageTexture: MTLTexture?

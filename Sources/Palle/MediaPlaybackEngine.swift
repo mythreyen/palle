@@ -123,9 +123,11 @@ public final class MediaPlaybackEngine: NSObject {
 
         var frames: [GIFFrame] = []
         var cumulativeTime: Double = 0.0
-        let maxFrames = min(count, 300) // Cap to prevent excessive memory on huge GIFs
+        let maxFrames = 120 // Lightweight memory cap: max 120 frames prevents multi-gigabyte RAM spikes
+        let step = max(1, count / maxFrames)
 
-        for i in 0..<maxFrames {
+        for i in stride(from: 0, to: count, by: step) {
+            guard frames.count < maxFrames else { break }
             guard let cgImage = CGImageSourceCreateImageAtIndex(source, i, nil) else { continue }
 
             var frameDuration: Double = 0.1
@@ -137,6 +139,8 @@ public final class MediaPlaybackEngine: NSObject {
                     frameDuration = delay
                 }
             }
+            // Scale duration by the stride step to preserve the author's intended playback speed
+            frameDuration *= Double(step)
 
             if let tex = makeTexture(from: cgImage, device: device) {
                 cumulativeTime += frameDuration
@@ -242,7 +246,7 @@ public final class MediaPlaybackEngine: NSObject {
     private func makeTexture(from cgImage: CGImage, device: MTLDevice) -> MTLTexture? {
         let origW = cgImage.width
         let origH = cgImage.height
-        let maxDim = 1920
+        let maxDim = 960 // Lightweight downscale: 960px is ~6x the resolution of ASCII cell grid and saves 75%+ VRAM
         let scale = min(1.0, CGFloat(maxDim) / CGFloat(max(origW, origH)))
 
         let targetW = max(1, Int(CGFloat(origW) * scale))

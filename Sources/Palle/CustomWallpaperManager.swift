@@ -152,7 +152,7 @@ public final class CustomWallpaperManager {
         NSLog("[Palle] Cleared custom media wallpaper, reverted to 3D procedural scenes")
     }
 
-    /// Resizes image to fit max 3840 physical dimension and creates an sRGB Metal texture
+    /// Resizes image to fit max 2048 physical dimension (saving 75% memory with zero ASCII quantization loss) and creates an sRGB Metal texture
     private func makeOptimizedTexture(from image: NSImage, device: MTLDevice) -> MTLTexture? {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
             return nil
@@ -160,7 +160,7 @@ public final class CustomWallpaperManager {
 
         let origW = cgImage.width
         let origH = cgImage.height
-        let maxDim = 3840
+        let maxDim = 2048
         let scale = min(1.0, CGFloat(maxDim) / CGFloat(max(origW, origH)))
 
         let targetW = max(1, Int(CGFloat(origW) * scale))

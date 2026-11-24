@@ -3,7 +3,7 @@ import Metal
 import MetalKit
 import SwiftUI
 
-/// High-performance SwiftUI wrapper for rendering a live mini 3D ASCII viewport.
+/// High-performance lightweight SwiftUI wrapper for rendering a live mini 3D ASCII viewport.
 public struct LiveASCIIPreviewView: NSViewRepresentable {
     public init() {}
 
@@ -14,7 +14,7 @@ public struct LiveASCIIPreviewView: NSViewRepresentable {
         mtkView.device = device
         mtkView.colorPixelFormat = .bgra8Unorm
         mtkView.framebufferOnly = true
-        mtkView.preferredFramesPerSecond = 60
+        mtkView.preferredFramesPerSecond = 30 // Balanced 30 FPS for thumbnail preview (cuts GPU draw by 50%)
         mtkView.enableSetNeedsDisplay = false
         mtkView.isPaused = false
 
@@ -23,6 +23,7 @@ public struct LiveASCIIPreviewView: NSViewRepresentable {
             context.coordinator.renderer = renderer
         }
 
+        context.coordinator.attach(mtkView: mtkView)
         return mtkView
     }
 
@@ -36,5 +37,35 @@ public struct LiveASCIIPreviewView: NSViewRepresentable {
 
     public final class Coordinator {
         var renderer: ASCIIRenderer?
+        weak var mtkView: MTKView?
+        private var observers: [Any] = []
+
+        func attach(mtkView: MTKView) {
+            self.mtkView = mtkView
+
+            let obsHide = NotificationCenter.default.addObserver(
+                forName: StudioWindowManager.didHideWindowNotification,
+                object: nil,
+                queue: .main
+            ) { [weak mtkView] _ in
+                mtkView?.isPaused = true
+            }
+
+            let obsShow = NotificationCenter.default.addObserver(
+                forName: StudioWindowManager.didShowWindowNotification,
+                object: nil,
+                queue: .main
+            ) { [weak mtkView] _ in
+                mtkView?.isPaused = false
+            }
+
+            observers = [obsHide, obsShow]
+        }
+
+        deinit {
+            for obs in observers {
+                NotificationCenter.default.removeObserver(obs)
+            }
+        }
     }
 }

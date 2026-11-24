@@ -34,17 +34,15 @@ public final class MenuBarController: NSObject {
         menu.addItem(studioItem)
         menu.addItem(NSMenuItem.separator())
 
-        // 3D Geometry Selector
-        let sceneHeader = NSMenuItem(title: "3D Scene Geometry", action: nil, keyEquivalent: "")
+        // Terminal Animations Selector
+        let sceneHeader = NSMenuItem(title: "Terminal Animations", action: nil, keyEquivalent: "")
         sceneHeader.isEnabled = false
         menu.addItem(sceneHeader)
 
         for scene in SceneGeometry.allCases {
             var title = scene.displayName
-            if scene == .mythHologram && config.custom3DText != "MYTH" {
-                title = "⚡️ 3D \"\(config.custom3DText)\" Cyber Hologram"
-            } else if scene == .mythPortal && config.custom3DText != "MYTH" {
-                title = "🌌 3D \"\(config.custom3DText)\" Cosmic Wormhole"
+            if scene == .asciiBounce && config.custom3DText != "MYTH" {
+                title = "📼 Bouncing \"\(config.custom3DText)\""
             }
             let item = NSMenuItem(title: title, action: #selector(selectScene(_:)), keyEquivalent: "")
             item.target = self
@@ -149,28 +147,37 @@ public final class MenuBarController: NSObject {
         colorHeader.isEnabled = false
         menu.addItem(colorHeader)
 
-        let themes = [
-            "Matrix Mint",
-            "Amber CRT",
-            "Cyber Cyan",
-            "Monochrome Paper",
-            "Holiday Evergreen",
-            "Winter Frost",
-            "Neon Sunset",
-            "Mythic Amethyst & Gold",
-            "Mythic Crimson Cyber"
-        ]
-        for (idx, name) in themes.enumerated() {
-            let item = NSMenuItem(title: name, action: #selector(selectColorTheme(_:)), keyEquivalent: "")
+        for theme in ColorThemePreset.all {
+            let item = NSMenuItem(title: theme.name, action: #selector(selectColorTheme(_:)), keyEquivalent: "")
             item.target = self
-            item.tag = idx
-            item.state = (config.selectedTheme == idx) ? .on : .off
+            item.tag = theme.id
+            item.state = (config.selectedTheme == theme.id) ? .on : .off
             menu.addItem(item)
         }
 
         menu.addItem(NSMenuItem.separator())
 
         // Power & Smart Throttling Toggles
+        let fpsHeader = NSMenuItem(title: "Hardware Frame Rate", action: nil, keyEquivalent: "")
+        fpsHeader.isEnabled = false
+        menu.addItem(fpsHeader)
+
+        let fpsOptions: [(Int, String)] = [
+            (60, "60 FPS (Ultra Smooth)"),
+            (30, "30 FPS (Power Saver - Recommended)"),
+            (24, "24 FPS (Cinematic Eco)"),
+            (15, "15 FPS (Ultra Low Power)")
+        ]
+        for (fps, title) in fpsOptions {
+            let item = NSMenuItem(title: title, action: #selector(selectFPS(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = fps
+            item.state = (config.preferredFPS == fps) ? .on : .off
+            menu.addItem(item)
+        }
+
+        menu.addItem(NSMenuItem.separator())
+
         let occlusionItem = NSMenuItem(
             title: "Smart Pause When Desktop Occluded",
             action: #selector(toggleOcclusionPause),
@@ -268,6 +275,12 @@ public final class MenuBarController: NSObject {
 
     @objc private func selectColorTheme(_ sender: NSMenuItem) {
         WallpaperConfig.shared.applyTheme(id: sender.tag)
+        rebuildMenu()
+    }
+
+    @objc private func selectFPS(_ sender: NSMenuItem) {
+        WallpaperConfig.shared.preferredFPS = sender.tag
+        WallpaperConfig.shared.notifySettingsChanged()
         rebuildMenu()
     }
 
